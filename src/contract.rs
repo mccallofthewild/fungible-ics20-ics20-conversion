@@ -161,41 +161,6 @@ fn get_bank_transfer_to_msg(recipient: &Addr, denom: &str, native_amount: Uint12
     transfer_bank_cosmos_msg
 }
 
-fn validate_input_amount(
-    actual_funds: &[Coin],
-    given_amount: Uint128,
-    given_denom: &Denom,
-) -> Result<(), ContractError> {
-    match given_denom {
-        Denom::Cw20(_) => Ok(()),
-        Denom::Native(denom) => {
-            let actual = get_amount_for_denom(actual_funds, denom);
-            if actual.amount != given_amount {
-                return Err(ContractError::InsufficientFunds {});
-            }
-            if &actual.denom != denom {
-                return Err(ContractError::IncorrectNativeDenom {
-                    provided: actual.denom,
-                    required: denom.to_string(),
-                });
-            };
-            Ok(())
-        }
-    }
-}
-
-fn get_amount_for_denom(coins: &[Coin], denom: &str) -> Coin {
-    let amount: Uint128 = coins
-        .iter()
-        .filter(|c| c.denom == denom)
-        .map(|c| c.amount)
-        .sum();
-    Coin {
-        amount,
-        denom: denom.to_string(),
-    }
-}
-
 pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
     STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
         state.count += 1;
